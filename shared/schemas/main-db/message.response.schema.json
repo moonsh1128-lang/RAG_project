@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-db/message.response.schema.json",
+  "title": "main-db message response",
+  "description": "DBServer -> MainServer: 생성된 message_id (DBServer가 GUID로 생성)",
+  "type": "object",
+  "properties": {
+    "message_id": { "type": "string" }
+  },
+  "required": ["message_id"]
+}

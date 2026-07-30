@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-db/rag-log.request.schema.json",
+  "title": "main-db rag-log request",
+  "description": "MainServer -> DBServer: rag_retrieval_logs row 삽입 (USER 메시지에 연결)",
+  "type": "object",
+  "properties": {
+    "message_id": { "type": "string", "description": "이 검색을 유발한 USER chat_messages의 message_id" },
+    "search_query": { "type": "string" },
+    "target_index": { "type": "string", "description": "RagServer의 SelectRag 값 (precedents/statutes/adjudications/interpretations)" },
+    "top_k": { "type": "integer" },
+    "retrieved_chunks": { "type": "string", "description": "검색된 내용 (JSON 문자열)" },
+    "retrieval_time_ms": { "type": ["integer", "null"] }
+  },
+  "required": ["message_id", "search_query", "target_index", "top_k", "retrieved_chunks"]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api-main/request.schema.json",
+  "title": "api-main request (chunk)",
+  "description": "Client -> API Server -> MainServer: 질문을 청크로 나눠 전송. rag_selector_query/final_request_number는 request_number==1인 첫 청크에만 실림",
+  "type": "object",
+  "properties": {
+    "session_id": { "type": "string", "description": "Client가 대화 시작 시 1회 생성해 이후 모든 질의에 재사용하는 세션 식별자" },
+    "rag_selector_query": { "type": "string", "description": "어떤 Rag를 사용할지 결정하기 위한 질문 내용 (첫 청크에만)" },
+    "request_number": { "type": "integer", "description": "이 청크의 순번 (1부터 시작)" },
+    "final_request_number": { "type": ["integer", "null"], "description": "전체 청크 개수 (첫 청크에만)" },
+    "message_chunk": { "type": "string", "description": "실제 질문(사건 질문) 내용의 한 조각" },
+    "is_complete": { "type": "boolean", "description": "이 청크가 마지막 청크인지" }
+  },
+  "required": ["session_id", "request_number", "message_chunk", "is_complete"]
+}

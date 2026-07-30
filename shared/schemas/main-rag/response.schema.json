@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-rag/response.schema.json",
+  "title": "main-rag response (chunk ack or final)",
+  "description": "RagServer -> MainServer. IsFinal=false면 청크 하나 받았다는 ack뿐. IsFinal=true면 전 청크가 모여 결정+검색까지 끝난 것",
+  "type": "object",
+  "properties": {
+    "IsFinal": { "type": "boolean" },
+    "SelectRag": { "type": "string", "description": "결정된 Rag 식별자 (IsFinal=true일 때만)" },
+    "message": { "type": "string", "description": "재조립된 전체 질문 내용 (IsFinal=true일 때만)" },
+    "RagContext": { "type": "string", "description": "선택된 Rag에서 얻은 관련 내용 (IsFinal=true일 때만)" },
+    "RetrievalTimeMs": { "type": "integer", "description": "검색에 걸린 시간(밀리초) (IsFinal=true일 때만)" }
+  },
+  "required": ["IsFinal"]
+}

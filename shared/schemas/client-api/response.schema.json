@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "client-api/response.schema.json",
+  "title": "client-api response",
+  "type": "object",
+  "properties": {},
+  "required": [],
+  "description": "미정 — Client에 최종적으로 어떤 형태로 응답을 돌려줄지 아직 확정되지 않음"
+}

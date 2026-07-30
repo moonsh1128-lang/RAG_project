@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-db/rag-log.response.schema.json",
+  "title": "main-db rag-log response",
+  "description": "DBServer -> MainServer: 생성된 log_id (DBServer가 GUID로 생성)",
+  "type": "object",
+  "properties": {
+    "log_id": { "type": "string" }
+  },
+  "required": ["log_id"]
+}

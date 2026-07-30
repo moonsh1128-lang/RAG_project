@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-db/message.request.schema.json",
+  "title": "main-db message request",
+  "description": "MainServer -> DBServer: chat_messages row 삽입",
+  "type": "object",
+  "properties": {
+    "session_id": { "type": "string" },
+    "sender_type": { "type": "string", "enum": ["USER", "BOT"] },
+    "message_text": { "type": "string" }
+  },
+  "required": ["session_id", "sender_type", "message_text"]
+}

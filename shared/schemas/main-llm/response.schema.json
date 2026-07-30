@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-llm/response.schema.json",
+  "title": "main-llm response",
+  "description": "LLMServer -> MainServer: 실행 결과",
+  "type": "object",
+  "properties": {
+    "result": { "type": "string", "description": "LLM이 전달받은 내용을 토대로 실행한 결과" }
+  },
+  "required": ["result"]
+}

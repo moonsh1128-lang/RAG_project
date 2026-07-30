@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-rag/request.schema.json",
+  "title": "main-rag request (chunk)",
+  "description": "MainServer -> RagServer: 청크 하나. RagType/FinalRequestNumber는 RequestNumber==1인 첫 청크에만 실림",
+  "type": "object",
+  "properties": {
+    "SessionId": { "type": "string" },
+    "RagType": { "type": "string", "description": "어떤 Rag를 쓸지 결정하기 위한 질문 내용 (첫 청크에만)" },
+    "RequestNumber": { "type": "integer", "description": "이 청크의 순번 (1부터 시작)" },
+    "FinalRequestNumber": { "type": ["integer", "null"], "description": "전체 청크 개수 (첫 청크에만)" },
+    "MessageChunk": { "type": "string", "description": "실제 질문(사건 질문) 내용의 한 조각" },
+    "IsComplete": { "type": "boolean", "description": "이 청크가 마지막 청크인지" }
+  },
+  "required": ["SessionId", "RequestNumber", "MessageChunk", "IsComplete"]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "main-llm/request.schema.json",
+  "title": "main-llm request",
+  "description": "MainServer -> LLMServer: 검색된 내용을 근거로 명령 실행을 요청",
+  "type": "object",
+  "properties": {
+    "retrieved_content": { "type": "string", "description": "RagServer가 선택된 Rag에서 얻은 관련 내용" },
+    "question": { "type": "string", "description": "실제 처리할 질문(사건 질문) 내용" }
+  },
+  "required": ["retrieved_content", "question"]
+}
