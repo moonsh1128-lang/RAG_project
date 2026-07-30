@@ -2,6 +2,13 @@
 bin/
 obj/
 
+# Rag 실 데이터 산출물 (대용량 — 코드 저장소와 분리, RawRagProject.md/PROGRESS.md 참고)
+RagFile/
+RagFile2/
+RagFile3/
+RagFile4/
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

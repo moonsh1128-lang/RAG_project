@@ -9,8 +9,9 @@ from app.channel import JsonMessageChannel
 from app.chunk_assembly import ChunkAssembly
 from app.ollama_client import OllamaClient
 from app.rag_selector import RAG_SOURCES, select_rag
-from app.rag_sources import retrieve
+from app.rag_sources import preload_real_data, retrieve
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-server")
 
 ollama = OllamaClient(
@@ -61,6 +62,7 @@ async def lifespan(app: FastAPI):
     models = await ollama.list_models()
     logger.info("이 PC의 Ollama에서 발견한 모델: %s", models)
     await ollama.ensure_embed_model_available()
+    preload_real_data()
     for channel in rag_channels.values():
         channel.start()
     yield

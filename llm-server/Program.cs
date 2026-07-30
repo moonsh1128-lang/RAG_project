@@ -17,6 +17,21 @@ builder.Services.AddHttpClient("ollama", client =>
 
 var app = builder.Build();
 
+// Ollama 호출의 HttpClient.Timeout(120초)으로 인한 취소를 원인 불명의 500 대신 504로 명확히 응답.
+// RequestAborted가 이미 켜져 있으면 호출자(클라이언트)가 먼저 끊은 것이므로 응답을 시도하지 않는다.
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (OperationCanceledException) when (!context.RequestAborted.IsCancellationRequested)
+    {
+        context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+        await context.Response.WriteAsJsonAsync(new { error = "Ollama 응답 시간 초과" });
+    }
+});
+
 // 이 PC의 Ollama에서 생성 모델이 실제로 있는지 시작 시점에 확인
 using (var scope = app.Services.CreateScope())
 {

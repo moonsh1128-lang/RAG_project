@@ -43,9 +43,10 @@ Client ──(AsyncIO/NDJSON)── API Server ──(HTTP REST)── MainServe
 - `app/chunk_assembly.py`: `ChunkAssembly` — session_id 기준으로 청크를 모아 완성(빠진 번호 없음 + `IsComplete`) 여부 판단, 재조립
 - `app/ollama_client.py`: 이 PC의 Ollama `/api/embed` 호출 + 시작 시 `/api/tags`로 임베딩 모델 존재 확인
 - `app/rag_selector.py`: 4개 Rag 소스 설명과의 코사인 유사도로 결정. slug는 `precedents`/`statutes`/`adjudications`/`interpretations` (DBServer의 `target_index` 컨벤션에 맞춤)
-- `app/vector_store.py` + `app/mock_data.py`: 실 데이터 없어 가상 샘플 문장으로 코사인 검색 (전부 `[가상 샘플]` 표시)
+- `app/vector_store.py`: 코사인 전수탐색 검색
+- `app/rag_sources.py`: **실 데이터 3개(precedents civil만/interpretations/adjudications, 총 8,445개 청크) 서버 시작 시 preload** — 이미 계산된 임베딩을 그대로 씀. statutes는 아직 실 데이터 없어 `mock_data.py` 가상 샘플 유지
 - `app/main.py` (`POST /rag`): 1번 청크의 `RagType`으로 `decide()` 후 해당 RagChannel에 청크 제출, 완성되면 검색+소요시간(`RetrievalTimeMs`) 측정 후 `{IsFinal:true, ...}` 응답, 아니면 `{IsFinal:false}`
-- 검증: 4개 Rag 각각 올바른 선택+검색 확인, 동시요청 4개 처리 확인, 청크 재조립 e2e 확인, 같은 Rag 채널에 다른 세션 2개 동시 전송해도 안 섞임 확인
+- 검증: 4개 Rag 각각 올바른 선택+검색 확인, 동시요청 4개 처리 확인, 청크 재조립 e2e 확인, 같은 Rag 채널에 다른 세션 2개 동시 전송해도 안 섞임 확인. **실 데이터 연동 후**: 임대차보증금/근로시간단축/기저귀착용 인권침해 질의로 각각 정확한 실제 문서 검색 + 실제 판결 인용 답변 생성까지 전체 체인 확인
 
 ## LLMServer (`llm-server/`, C#, ASP.NET Core Controller)
 - `Clients/OllamaClient.cs`: 시작 시 생성 모델(`llama3.2:3b`) 존재 확인, `/api/chat` 호출(temperature 0)
@@ -75,8 +76,9 @@ Client ──(AsyncIO/NDJSON)── API Server ──(HTTP REST)── MainServe
 8. 응답 전달 경로(session_id 기반)/localhost 바인딩/검색 소요시간 실측 반영 후 재검증
 9. ping/pong 하트비트 + 다중 클라이언트 세션 관리 추가, 동시 느린 질의 2세션 시나리오로 오탐 종료 버그 발견·수정 후 재검증
 10. 청크 전송 프로토콜 전면 도입(수정 전 전체 백업 후 진행) — Client→API→MainServer→RagServer 4단 릴레이, RagServer의 Rag별 채널에서 최종 재조립+검색. 단일 세션 3청크 재조립 확인 + 같은 Rag 채널에 다른 세션 2개 동시 전송해도 안 섞임을 확인
+11. Rag 3개(precedents/interpretations/adjudications) 실 데이터 연동 — mock_data.py 대체, 실제 법률 문서 검색+실제 인용 답변 생성까지 전체 체인 재검증
 
 매 단계 테스트 데이터는 삭제하고 진행함.
 
 ## 남은 것
-데이터 소스 파일 확보, Client 실제 UI/UX, LLM 프롬프트/hallucination 대응, 검색 파라미터(top-K 등) 확정, client-api/api-main 응답 스키마 등 — 전체 목록은 [`RawRagProject.md`](../RawRagProject.md)의 "미확정" 섹션 참고.
+statutes 실 데이터 확보(현재 mock 유지), precedents 나머지 문서 처리(다른 PC에서 진행 중), Client 실제 UI/UX, LLM 프롬프트/hallucination 대응, 검색 파라미터(top-K 등) 확정, client-api/api-main 응답 스키마 등 — 전체 목록은 [`RawRagProject.md`](../RawRagProject.md)의 "미확정" 섹션 참고.
