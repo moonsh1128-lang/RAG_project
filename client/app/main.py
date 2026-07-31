@@ -19,9 +19,6 @@ async def run_complaint_flow(client: ApiServerClient, loop: asyncio.AbstractEven
     accused_address = await ask("피고소인 주소> ")
     charge = await ask("죄명> ")
     incident_description = await ask("사건 설명(육하원칙으로)> ")
-    evidence_raw = await ask("증거자료(쉼표로 구분, 없으면 빈 줄)> ")
-    evidence = [item.strip() for item in evidence_raw.split(",") if item.strip()]
-    submission_target = await ask("제출처(예: OO경찰서장)> ")
 
     response = await client.send_complaint(
         {
@@ -32,8 +29,6 @@ async def run_complaint_flow(client: ApiServerClient, loop: asyncio.AbstractEven
             "accused_address": accused_address,
             "charge": charge,
             "incident_description": incident_description,
-            "evidence": evidence,
-            "submission_target": submission_target,
         }
     )
 

@@ -2,8 +2,6 @@ import asyncio
 import json
 import uuid
 
-CHUNK_SIZE = 20  # 질문 텍스트를 이 글자 수만큼씩 나눠 보낸다
-
 
 class ApiServerClient:
     """API Server와의 커넥션 하나 = 세션 하나. session_id는 연결 시점에 1회 생성해 재사용한다.
@@ -22,6 +20,8 @@ class ApiServerClient:
         self._responses: asyncio.Queue[dict] = asyncio.Queue()
         self._reader_task: asyncio.Task | None = None
         self._closed_event = asyncio.Event()
+        self._message_count = 0
+        self._history: list[dict] = []  # 이 세션의 이전 질문/답변 — 2번째 메시지부터 rewrite에 쓰인다
 
     async def connect(self) -> None:
         self._reader, self._writer = await asyncio.open_connection(self._host, self._port)
@@ -63,25 +63,21 @@ class ApiServerClient:
             connection_closed.cancel()
 
     async def send_query(self, rag_selector_query: str, question: str) -> dict:
-        # small(1)번부터 big(N)번까지 순서대로 청크를 만든다
-        chunks = [question[i : i + CHUNK_SIZE] for i in range(0, len(question), CHUNK_SIZE)] or [""]
-        final_request_number = len(chunks)
-
-        response: dict | None = None
-        for request_number, message_chunk in enumerate(chunks, start=1):
-            payload = {
+        # 청킹은 API Server가 담당 — Client는 질문 전체를 한 번에 보낸다.
+        self._message_count += 1
+        await self._write(
+            {
                 "session_id": self.session_id,
-                "request_number": request_number,
-                "message_chunk": message_chunk,
-                "is_complete": request_number == final_request_number,
+                "rag_selector_query": rag_selector_query,
+                "question": question,
+                "message_count": self._message_count,
+                "history": self._history,
             }
-            if request_number == 1:
-                payload["rag_selector_query"] = rag_selector_query
-                payload["final_request_number"] = final_request_number
-
-            await self._write(payload)
-            response = await self._wait_for_response()
-
+        )
+        response = await self._wait_for_response()
+        answer = response.get("result")
+        if answer is not None:
+            self._history.append({"question": question, "answer": answer})
         return response
 
     async def send_complaint(self, fields: dict) -> dict:

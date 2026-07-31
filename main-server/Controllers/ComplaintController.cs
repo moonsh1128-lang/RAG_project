@@ -16,10 +16,6 @@ public sealed class ComplaintController(LlmServerClient llmServer) : ControllerB
     {
         var narrative = await llmServer.GenerateComplaintNarrativeAsync(request.Charge, request.IncidentDescription, ct);
 
-        var evidenceList = request.Evidence.Count == 0
-            ? "(제출할 증거자료 없음)"
-            : string.Join("\n", request.Evidence.Select((item, i) => $"{i + 1}. {item}"));
-
         var template = await System.IO.File.ReadAllTextAsync(TemplatePath, ct);
         var document = template
             .Replace("{{고소인_명칭}}", request.ComplainantName)
@@ -28,10 +24,7 @@ public sealed class ComplaintController(LlmServerClient llmServer) : ControllerB
             .Replace("{{피고소인_성명}}", request.AccusedName)
             .Replace("{{피고소인_주소}}", request.AccusedAddress)
             .Replace("{{고소취지}}", narrative.Purpose)
-            .Replace("{{고소사실}}", narrative.Facts)
-            .Replace("{{증거물_목록}}", evidenceList)
-            .Replace("{{제출일자}}", DateTime.Now.ToString("yyyy. M. d."))
-            .Replace("{{제출처}}", request.SubmissionTarget);
+            .Replace("{{고소사실}}", narrative.Facts);
 
         return Ok(new ComplaintResponse(document));
     }

@@ -2,8 +2,49 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "api-main/response.schema.json",
   "title": "api-main response",
-  "type": "object",
-  "properties": {},
-  "required": [],
-  "description": "미정 — Client에 최종적으로 어떤 형태로 응답을 돌려줄지 아직 확정되지 않음"
+  "description": "MainServer -> API Server (HTTP response). API Server가 그대로 Client에 릴레이.",
+  "oneOf": [
+    { "$ref": "#/$defs/chunkAck" },
+    { "$ref": "#/$defs/queryResult" },
+    { "$ref": "#/$defs/complaintResult" },
+    { "$ref": "#/$defs/timeoutError" }
+  ],
+  "$defs": {
+    "chunkAck": {
+      "title": "청크 수신 확인 (200)",
+      "description": "질문 청크가 마지막이 아닐 때(RagServer가 아직 재조립 중일 때)의 응답.",
+      "type": "object",
+      "properties": {
+        "chunk_received": { "const": true },
+        "request_number": { "type": "integer" }
+      },
+      "required": ["chunk_received", "request_number"]
+    },
+    "queryResult": {
+      "title": "질문 최종 응답 (200)",
+      "description": "RagServer 검색 + LlmServer 생성 + DBServer 저장까지 끝난 뒤의 최종 응답. LlmServerResponse 그대로.",
+      "type": "object",
+      "properties": {
+        "result": { "type": "string" }
+      },
+      "required": ["result"]
+    },
+    "complaintResult": {
+      "title": "고소장 생성 결과 (200)",
+      "type": "object",
+      "properties": {
+        "document": { "type": "string" }
+      },
+      "required": ["document"]
+    },
+    "timeoutError": {
+      "title": "다운스트림 타임아웃/오류 (504)",
+      "description": "RagServer/LlmServer/DbServer 호출이 각각 설정된 HttpClient.Timeout(30s/150s/15s)을 넘기거나 실패하면, MainServer의 전역 예외처리 미들웨어(Program.cs)가 스택트레이스 대신 이 형태로 응답.",
+      "type": "object",
+      "properties": {
+        "error": { "const": "다운스트림 서버 응답 시간 초과" }
+      },
+      "required": ["error"]
+    }
+  }
 }

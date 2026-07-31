@@ -29,7 +29,9 @@ public sealed class LlmController(OllamaClient ollama) : ControllerBase
         "사용자가 제공한 [죄명]과 [사건 설명]만 근거로 삼아라 — 사용자가 말하지 않은 사실이나 " +
         "숫자, 날짜, 인물을 지어내지 마라. 아래 두 항목을 아래 형식 그대로 정확히 지켜서 작성하라.\n\n" +
         "[고소취지]\n(피고소인의 행위와 그로 인한 결과를 한두 문장으로 요약)\n\n" +
-        "[고소사실]\n(사건 경위, 피고소인의 구체적 행위, 고소인이 입은 피해를 시간 순서대로 서술)";
+        "[고소사실]\n(사건 경위, 피고소인의 구체적 행위, 고소인이 입은 피해를 시간 순서대로 서술)\n\n" +
+        "[고소사실] 작성이 끝나면 반드시 그 자리에서 멈춰라. 증거물 목록, 제출 날짜, 고소인 서명, " +
+        "제출처(경찰서·검찰청 등) 같은 항목은 절대 쓰지 마라 — 이 항목들은 이미 다른 곳에서 채워진다.";
 
     [HttpPost("narrative")]
     public async Task<ActionResult<ComplaintNarrativeResponse>> PostNarrativeAsync(
@@ -58,5 +60,23 @@ public sealed class LlmController(OllamaClient ollama) : ControllerBase
         var purpose = raw[(purposeIndex + purposeMarker.Length)..factsIndex].Trim();
         var facts = raw[(factsIndex + factsMarker.Length)..].Trim();
         return new ComplaintNarrativeResponse(purpose, facts);
+    }
+
+    private const string RewriteSystemPrompt =
+        "너는 대화형 법률 상담 챗봇의 후속 질문을 재작성하는 도우미다. 한국어로만 답한다. " +
+        "[이전 대화]를 참고해서 [새 메시지]가 그 자체만으로 완전히 이해되는 독립적인 질문이 되도록 다시 써라. " +
+        "대명사나 생략된 표현(그건, 그럼, 위 경우 등)을 이전 대화의 실제 내용으로 구체화하라. " +
+        "이전 대화에 없던 새로운 사실을 지어내지 마라. 재작성한 질문 하나만 출력하고 다른 설명은 붙이지 마라.";
+
+    [HttpPost("rewrite")]
+    public async Task<ActionResult<RewriteResponse>> PostRewriteAsync(RewriteRequest request, CancellationToken ct)
+    {
+        var historyText = string.Join(
+            "\n\n",
+            request.History.Select((turn, i) =>
+                $"[이전 질문 {i + 1}]\n{turn.Question}\n[이전 답변 {i + 1}]\n{turn.Answer}"));
+        var userPrompt = $"[이전 대화]\n{historyText}\n\n[새 메시지]\n{request.NewMessage}";
+        var rewritten = await ollama.ChatAsync(RewriteSystemPrompt, userPrompt, ct);
+        return Ok(new RewriteResponse(rewritten.Trim()));
     }
 }

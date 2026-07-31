@@ -2,8 +2,46 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "client-api/response.schema.json",
   "title": "client-api response",
-  "type": "object",
-  "properties": {},
-  "required": [],
-  "description": "미정 — Client에 최종적으로 어떤 형태로 응답을 돌려줄지 아직 확정되지 않음"
+  "description": "API Server -> Client. 메시지 종류 4가지 — 하트비트 ping / 질문 최종 응답 / 고소장 문서 / 오류. 청킹이 API Server 내부(API Server<->MainServer)로 옮겨져 이 구간엔 중간 ack가 없다 — 질문 하나에 응답 하나.",
+  "oneOf": [
+    { "$ref": "#/$defs/ping" },
+    { "$ref": "#/$defs/queryResult" },
+    { "$ref": "#/$defs/complaintResult" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "ping": {
+      "title": "하트비트",
+      "description": "10초 주기로 API Server가 보냄. Client는 즉시 {\"type\":\"pong\"}으로 응답해야 함.",
+      "type": "object",
+      "properties": { "type": { "const": "ping" } },
+      "required": ["type"]
+    },
+    "queryResult": {
+      "title": "질문 최종 응답",
+      "description": "API Server가 내부적으로 청크 전송을 모두 마치고 받은 최종 결과. MainServer의 LlmServerResponse를 그대로 전달.",
+      "type": "object",
+      "properties": {
+        "result": { "type": "string", "description": "마크다운 형식(## 관련 사례 / ## 조언 섹션 포함)" }
+      },
+      "required": ["result"]
+    },
+    "complaintResult": {
+      "title": "고소장 생성 결과",
+      "type": "object",
+      "properties": {
+        "document": { "type": "string", "description": "완성된 고소장 마크다운 전문 — Client가 실행 위치에 .md로 저장" }
+      },
+      "required": ["document"]
+    },
+    "error": {
+      "title": "오류",
+      "description": "다운스트림 예외(타임아웃 포함)를 API Server의 process_query()가 str(exc)로 감싼 것. MainServer 자체가 반환하는 504 JSON({\"error\": \"다운스트림 서버 응답 시간 초과\"})과 형태가 다를 수 있음 — 이 경로에선 파이썬 예외 메시지가 그대로 노출될 수 있어 클라이언트단 로그에만 남기고 사용자 화면엔 그대로 보여주지 않는 게 안전함.",
+      "type": "object",
+      "properties": {
+        "error": { "type": "string" }
+      },
+      "required": ["error"]
+    }
+  }
 }

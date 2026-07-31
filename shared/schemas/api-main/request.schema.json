@@ -1,16 +1,61 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "api-main/request.schema.json",
-  "title": "api-main request (chunk)",
-  "description": "Client -> API Server -> MainServer: 질문을 청크로 나눠 전송. rag_selector_query/final_request_number는 request_number==1인 첫 청크에만 실림",
-  "type": "object",
-  "properties": {
-    "session_id": { "type": "string", "description": "Client가 대화 시작 시 1회 생성해 이후 모든 질의에 재사용하는 세션 식별자" },
-    "rag_selector_query": { "type": "string", "description": "어떤 Rag를 사용할지 결정하기 위한 질문 내용 (첫 청크에만)" },
-    "request_number": { "type": "integer", "description": "이 청크의 순번 (1부터 시작)" },
-    "final_request_number": { "type": ["integer", "null"], "description": "전체 청크 개수 (첫 청크에만)" },
-    "message_chunk": { "type": "string", "description": "실제 질문(사건 질문) 내용의 한 조각" },
-    "is_complete": { "type": "boolean", "description": "이 청크가 마지막 청크인지" }
-  },
-  "required": ["session_id", "request_number", "message_chunk", "is_complete"]
+  "title": "api-main request",
+  "description": "API Server -> MainServer (HTTP POST). type=complaint는 Client 페이로드를 그대로 릴레이하지만, 질문(type 없음)은 API Server가 question을 직접 20자 단위로 청킹해서 POST /query(MainServer.Models.QueryChunkRequest)로 순서대로 호출함 — ping/pong은 API Server 선에서 끝나 MainServer로 전달되지 않음.",
+  "oneOf": [
+    { "$ref": "#/$defs/queryChunk" },
+    { "$ref": "#/$defs/complaint" }
+  ],
+  "$defs": {
+    "queryChunk": {
+      "title": "질문 청크 (POST /query)",
+      "description": "질문을 20자 단위로 잘라 순서대로 전송. rag_selector_query/final_request_number/message_count/history는 request_number==1인 첫 청크에만 실림.",
+      "type": "object",
+      "properties": {
+        "session_id": { "type": "string" },
+        "rag_selector_query": { "type": "string" },
+        "request_number": { "type": "integer", "minimum": 1 },
+        "final_request_number": { "type": ["integer", "null"] },
+        "message_chunk": { "type": "string" },
+        "is_complete": { "type": "boolean" },
+        "message_count": {
+          "type": ["integer", "null"],
+          "description": "1이면 기존 로직 그대로, 2 이상이면 MainServer가 history를 참고해 질문을 재작성(LLM 답변 생성 단계에서만 사용, 검색은 원문 그대로)"
+        },
+        "history": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "answer": { "type": "string" }
+            },
+            "required": ["question", "answer"]
+          }
+        }
+      },
+      "required": ["session_id", "request_number", "message_chunk", "is_complete"]
+    },
+    "complaint": {
+      "title": "고소장 생성 요청 (POST /complaint)",
+      "description": "결과 문서는 고소인/피고소인 정보+고소취지+고소사실까지만 포함(증거물/날짜/서명/제출처는 서식에서 제외됨).",
+      "type": "object",
+      "properties": {
+        "type": { "const": "complaint" },
+        "session_id": { "type": "string" },
+        "complainant_name": { "type": "string" },
+        "complainant_representative": { "type": "string" },
+        "complainant_address": { "type": "string" },
+        "accused_name": { "type": "string" },
+        "accused_address": { "type": "string" },
+        "charge": { "type": "string" },
+        "incident_description": { "type": "string" }
+      },
+      "required": [
+        "type", "session_id", "complainant_name", "complainant_address",
+        "accused_name", "accused_address", "charge", "incident_description"
+      ]
+    }
+  }
 }

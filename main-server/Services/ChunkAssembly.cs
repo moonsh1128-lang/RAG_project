@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using MainServer.Models;
 
 namespace MainServer.Services;
 
@@ -7,12 +8,23 @@ public sealed class ChunkAssembly
     private readonly ConcurrentDictionary<int, string> _chunks = new();
     private int? _finalRequestNumber;
 
-    public void Add(int requestNumber, string messageChunk, int? finalRequestNumber)
+    // 1번 청크에만 실리지만, 실제로 쓰는 시점(마지막 청크)까지 들고 있어야 해서 여기 보관.
+    public int? MessageCount { get; private set; }
+    public List<HistoryTurn>? History { get; private set; }
+
+    public void Add(
+        int requestNumber, string messageChunk, int? finalRequestNumber,
+        int? messageCount = null, List<HistoryTurn>? history = null)
     {
         _chunks[requestNumber] = messageChunk;
         if (finalRequestNumber is not null)
         {
             _finalRequestNumber = finalRequestNumber;
+        }
+        if (messageCount is not null)
+        {
+            MessageCount = messageCount;
+            History = history;
         }
     }
 

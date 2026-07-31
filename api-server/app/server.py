@@ -58,7 +58,13 @@ async def process_query(payload: dict, state: ConnectionState) -> None:
             result = await main_server.complaint(payload)
         else:
             # MainServer가 LLMServer 응답을 그대로 돌려주므로 결과를 그대로 전달한다.
-            result = await main_server.query(payload)
+            result = await main_server.query(
+                session_id,
+                payload.get("rag_selector_query", ""),
+                payload.get("question", ""),
+                payload.get("message_count", 1),
+                payload.get("history", []),
+            )
     except Exception as exc:
         result = {"error": str(exc)}
 

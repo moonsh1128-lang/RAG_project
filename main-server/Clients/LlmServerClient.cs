@@ -22,4 +22,12 @@ public sealed class LlmServerClient(HttpClient http)
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<ComplaintNarrativeResponse>(ct))!;
     }
+
+    public async Task<RewriteResponse> RewriteQuestionAsync(
+        List<HistoryTurn> history, string newMessage, CancellationToken ct)
+    {
+        var response = await http.PostAsJsonAsync("/llm/rewrite", new RewriteRequest(history, newMessage), ct);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<RewriteResponse>(ct))!;
+    }
 }
