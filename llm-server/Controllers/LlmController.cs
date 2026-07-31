@@ -10,14 +10,16 @@ public sealed class LlmController(OllamaClient ollama) : ControllerBase
 {
     private const string SystemPrompt =
         "너는 민사법 관련 질문에 답하는 법률 보조 도우미다. 한국어로만 답한다. " +
-        "사용자 메시지에 있는 [참고 정보]를 근거로 [질문]에 직접 답하라. " +
-        "답변은 마크다운 형식으로 작성한다 — 필요하면 소제목(##)과 목록(-)을 쓰고, " +
-        "핵심 결론이나 인용한 법 조문·판례명은 **굵게** 표시한다.";
+        "사용자 메시지에 있는 [참고 정보]를 근거로 아래 두 항목을 마크다운 형식으로 작성하라 — " +
+        "필요하면 소제목(##)과 목록(-)을 쓰고, 핵심 결론이나 인용한 법 조문·판례명은 **굵게** 표시한다.\n\n" +
+        "## 관련 사례\n(참고 정보에 있는 사례·조문의 핵심 내용을 질문과 관련지어 요약)\n\n" +
+        "## 조언\n(위 사례를 근거로 질문자가 실제로 취할 수 있는 절차나 행동을 구체적으로 제안. " +
+        "참고 정보에 없는 사실을 지어내지 말고, 확실하지 않으면 전문가 상담을 권하라.)";
 
     [HttpPost]
     public async Task<ActionResult<LlmResponse>> PostAsync(LlmRequest request, CancellationToken ct)
     {
-        var userPrompt = $"[참고 정보]\n{request.RetrievedContent}\n\n[질문]\n{request.Question}\n\n위 참고 정보를 근거로 질문에 답하라.";
+        var userPrompt = $"[참고 정보]\n{request.RetrievedContent}\n\n[질문]\n{request.Question}\n\n위 참고 정보를 근거로 답하라.";
         var result = await ollama.ChatAsync(SystemPrompt, userPrompt, ct);
         return Ok(new LlmResponse(result));
     }
