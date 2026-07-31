@@ -84,6 +84,10 @@ class ApiServerClient:
 
         return response
 
+    async def send_complaint(self, fields: dict) -> dict:
+        await self._write({"type": "complaint", "session_id": self.session_id, **fields})
+        return await self._wait_for_response()
+
     async def close(self) -> None:
         self._reader_task.cancel()
         self._writer.close()

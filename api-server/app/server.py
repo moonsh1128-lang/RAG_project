@@ -54,8 +54,11 @@ async def process_query(payload: dict, state: ConnectionState) -> None:
         sessions[session_id] = state.writer
 
     try:
-        # MainServer가 LLMServer 응답을 그대로 돌려주므로 결과를 그대로 전달한다.
-        result = await main_server.query(payload)
+        if payload.get("type") == "complaint":
+            result = await main_server.complaint(payload)
+        else:
+            # MainServer가 LLMServer 응답을 그대로 돌려주므로 결과를 그대로 전달한다.
+            result = await main_server.query(payload)
     except Exception as exc:
         result = {"error": str(exc)}
 

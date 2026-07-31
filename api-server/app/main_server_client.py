@@ -9,3 +9,8 @@ class MainServerClient:
         response = await self._client.post("/query", json=payload)
         response.raise_for_status()
         return response.json()
+
+    async def complaint(self, payload: dict) -> dict:
+        response = await self._client.post("/complaint", json=payload)
+        response.raise_for_status()
+        return response.json()

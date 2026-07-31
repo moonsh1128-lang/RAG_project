@@ -13,4 +13,13 @@ public sealed class LlmServerClient(HttpClient http)
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<LlmServerResponse>(ct))!;
     }
+
+    public async Task<ComplaintNarrativeResponse> GenerateComplaintNarrativeAsync(
+        string charge, string incidentDescription, CancellationToken ct)
+    {
+        var response = await http.PostAsJsonAsync(
+            "/llm/narrative", new ComplaintNarrativeRequest(charge, incidentDescription), ct);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<ComplaintNarrativeResponse>(ct))!;
+    }
 }

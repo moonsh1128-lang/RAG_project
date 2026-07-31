@@ -9,3 +9,11 @@ public sealed record LlmRequest(
 
 public sealed record LlmResponse(
     [property: JsonPropertyName("result")] string Result);
+
+public sealed record ComplaintNarrativeRequest(
+    [property: JsonPropertyName("charge")] string Charge,
+    [property: JsonPropertyName("incident_description")] string IncidentDescription);
+
+public sealed record ComplaintNarrativeResponse(
+    [property: JsonPropertyName("purpose")] string Purpose,
+    [property: JsonPropertyName("facts")] string Facts);
